@@ -1,0 +1,1006 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌾 智能农作物病虫害检测系统</title>
+    <meta name="description" content="基于YOLOv11深度学习的智能病虫害检测系统">
+    <meta name="keywords" content="病虫害检测,农业AI,作物保护,智能农业">
+    
+    <!-- PWA支持 -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#667eea">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Microsoft YaHei", "Segoe UI", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 头部样式 */
+        .header {
+            text-align: center;
+            padding: 30px 20px;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 1.3rem;
+            opacity: 0.9;
+            margin-bottom: 20px;
+        }
+
+        .header .stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 20px;
+        }
+
+        .stat-item {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 10px 20px;
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        /* 主要内容区域 */
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .header .stats {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+
+        /* 卡片样式 */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 50px rgba(0,0,0,0.15);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        /* 上传区域样式 */
+        .upload-section {
+            text-align: center;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 50px 20px;
+            margin: 20px 0;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(102, 126, 234, 0.05);
+            position: relative;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: rgba(118, 75, 162, 0.1);
+            transform: translateY(-2px);
+        }
+
+        .upload-area.dragover {
+            border-color: #4CAF50;
+            background: rgba(76, 175, 80, 0.1);
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 3.5rem;
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 1.2rem;
+            color: #666;
+            margin-bottom: 15px;
+            font-weight: 500;
+        }
+
+        .upload-subtext {
+            font-size: 0.9rem;
+            color: #999;
+            opacity: 0.8;
+        }
+
+        .file-input {
+            display: none;
+        }
+
+        /* 按钮样式 */
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, #6c757d 0%, #495057 100%);
+            box-shadow: 0 5px 20px rgba(108, 117, 125, 0.3);
+        }
+
+        /* 图像预览样式 */
+        .image-preview {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .preview-image {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .preview-image:hover {
+            transform: scale(1.05);
+        }
+
+        .image-info {
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        /* 结果区域样式 */
+        .results-section {
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .pulse {
+            animation: pulse 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
+        /* 检测结果样式 */
+        .detection-results {
+            margin-bottom: 25px;
+        }
+
+        .detection-summary {
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .detection-item {
+            background: rgba(76, 175, 80, 0.1);
+            border-left: 4px solid #4CAF50;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 8px;
+            transition: transform 0.2s ease;
+        }
+
+        .detection-item:hover {
+            transform: translateX(5px);
+        }
+
+        .detection-item.warning {
+            background: rgba(255, 152, 0, 0.1);
+            border-left-color: #FF9800;
+        }
+
+        .detection-item.danger {
+            background: rgba(244, 67, 54, 0.1);
+            border-left-color: #F44336;
+        }
+
+        .pest-name {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .confidence {
+            color: #666;
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+        }
+
+        .pest-details {
+            font-size: 0.9rem;
+            color: #777;
+        }
+
+        /* 防治建议样式 */
+        .treatment-advice {
+            background: rgba(102, 126, 234, 0.05);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 20px;
+        }
+
+        .advice-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+        }
+
+        .advice-icon {
+            margin-right: 10px;
+            font-size: 1.5rem;
+        }
+
+        .advice-content {
+            line-height: 1.8;
+            color: #555;
+            white-space: pre-line;
+        }
+
+        /* 结果图像样式 */
+        .result-image-container {
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .result-image {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+
+        .image-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-small {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            border-radius: 20px;
+        }
+
+        /* 错误样式 */
+        .error {
+            background: rgba(244, 67, 54, 0.1);
+            color: #F44336;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid rgba(244, 67, 54, 0.3);
+            border-left: 4px solid #F44336;
+        }
+
+        .error-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        /* 成功样式 */
+        .success {
+            background: rgba(76, 175, 80, 0.1);
+            color: #4CAF50;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+            border-left: 4px solid #4CAF50;
+            text-align: center;
+        }
+
+        .success-title {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        /* 页脚样式 */
+        .footer {
+            text-align: center;
+            margin-top: 50px;
+            padding: 30px;
+            color: rgba(255, 255, 255, 0.8);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .footer a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+        }
+
+        .footer a:hover {
+            color: white;
+        }
+
+        /* 系统状态指示器 */
+        .system-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            z-index: 1000;
+        }
+
+        .status-dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-online {
+            background: #4CAF50;
+        }
+
+        .status-offline {
+            background: #F44336;
+        }
+
+        /* 动画效果 */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+            
+            .btn {
+                width: 100%;
+                padding: 12px;
+            }
+            
+            .upload-area {
+                padding: 30px 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 系统状态指示器 -->
+    <div class="system-status" id="systemStatus">
+        <span class="status-dot status-offline" id="statusDot"></span>
+        <span id="statusText">检查中...</span>
+    </div>
+
+    <div class="container">
+        <!-- 头部 -->
+        <header class="header">
+            <h1>🌾 智能农作物病虫害检测系统</h1>
+            <p>基于YOLOv11深度学习模型，精准识别102种常见病虫害</p>
+            <div class="stats">
+                <div class="stat-item">
+                    <span class="stat-value" id="todayDetections">0</span>
+                    <span class="stat-label">今日检测</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="totalDetections">0</span>
+                    <span class="stat-label">总检测数</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-value" id="avgTime">0.0s</span>
+                    <span class="stat-label">平均用时</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 主要内容 -->
+        <main class="main-content">
+            <!-- 左侧：图像上传区域 -->
+            <div class="card upload-section">
+                <h2>📷 上传作物图像</h2>
+                
+                <div class="upload-area" 
+                     id="uploadArea"
+                     onclick="triggerFileInput()"
+                     ondragover="handleDragOver(event)"
+                     ondragleave="handleDragLeave(event)"
+                     ondrop="handleDrop(event)">
+                    
+                    <div class="upload-icon">📁</div>
+                    <div class="upload-text">
+                        点击选择图像文件
+                    </div>
+                    <div class="upload-subtext">
+                        或拖拽图像到此处<br>
+                        支持 JPG、PNG、JPEG 格式，最大 10MB
+                    </div>
+                </div>
+
+                <input type="file" 
+                       class="file-input" 
+                       id="fileInput"
+                       accept="image/*" 
+                       onchange="handleFileSelect(event)">
+
+                <div class="image-preview" id="imagePreview" style="display: none;">
+                    <img id="previewImage" class="preview-image" alt="预览图像">
+                    <div class="image-info" id="imageInfo"></div>
+                </div>
+
+                <div id="uploadActions" style="display: none; margin-top: 20px;">
+                    <button class="btn" id="detectButton" onclick="performDetection()">
+                        🚀 开始检测
+                    </button>
+                    <button class="btn btn-secondary btn-small" onclick="clearImage()" style="margin-left: 10px;">
+                        🗑️ 清除图像
+                    </button>
+                </div>
+            </div>
+
+            <!-- 右侧：检测结果区域 -->
+            <div class="card results-section">
+                <h2>📊 检测结果</h2>
+
+                <!-- 初始状态 -->
+                <div id="initialState" class="fade-in">
+                    <div style="text-align: center; color: #999; padding: 50px 20px;">
+                        <div style="font-size: 4rem; margin-bottom: 20px;">🌱</div>
+                        <h3>欢迎使用智能病虫害检测系统</h3>
+                        <p>请上传作物图像开始检测</p>
+                        <div style="margin-top: 20px; font-size: 0.9rem; color: #666;">
+                            <p>💡 系统支持:</p>
+                            <p>• 102种常见病虫害识别</p>
+                            <p>• 实时检测结果可视化</p>
+                            <p>• 专业防治建议生成</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 加载状态 -->
+                <div id="loadingState" class="loading" style="display: none;">
+                    <div class="spinner"></div>
+                    <p class="pulse">🔍 AI正在分析图像中的病虫害...</p>
+                    <p style="font-size: 0.9rem; color: #666; margin-top: 10px;">
+                        使用优化参数: conf=0.25, iou=0.5, size=416
+                    </p>
+                </div>
+
+                <!-- 错误状态 -->
+                <div id="errorState" class="error" style="display: none;">
+                    <div class="error-title">❌ 检测失败</div>
+                    <div id="errorMessage"></div>
+                    <div style="margin-top: 10px; font-size: 0.9rem;">
+                        <p>💡 可能的解决方案:</p>
+                        <p>• 检查网络连接</p>
+                        <p>• 确认图像格式正确</p>
+                        <p>• 尝试重新上传图像</p>
+                    </div>
+                </div>
+
+                <!-- 检测结果 -->
+                <div id="resultsContainer" style="display: none;">
+                    <!-- 结果将动态插入这里 -->
+                </div>
+            </div>
+        </main>
+
+        <!-- 页脚 -->
+        <footer class="footer">
+            <p>© 2025 智能农作物病虫害检测系统 | 基于YOLOv11 + 深度学习技术</p>
+            <p>为中国农业现代化贡献科技力量 🇨🇳</p>
+        </footer>
+    </div>
+
+    <script>
+        // 全局变量
+        let currentImageData = null;
+        let detectionResults = null;
+        const API_BASE_URL = 'http://localhost:5000/api';
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🌾 智能病虫害检测系统加载完成');
+            checkSystemStatus();
+            loadSystemStats();
+            
+            // 每30秒检查一次系统状态
+            setInterval(checkSystemStatus, 30000);
+            
+            // 每5分钟更新一次统计数据
+            setInterval(loadSystemStats, 300000);
+        });
+
+        // 检查系统状态
+        async function checkSystemStatus() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/health`);
+                const data = await response.json();
+                
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+                
+                if (data.success && data.model_loaded) {
+                    statusDot.className = 'status-dot status-online';
+                    statusText.textContent = '系统正常';
+                } else {
+                    statusDot.className = 'status-dot status-offline';
+                    statusText.textContent = '模型未加载';
+                }
+            } catch (error) {
+                const statusDot = document.getElementById('statusDot');
+                const statusText = document.getElementById('statusText');
+                statusDot.className = 'status-dot status-offline';
+                statusText.textContent = '连接失败';
+            }
+        }
+
+        // 加载系统统计数据
+        async function loadSystemStats() {
+            try {
+                const response = await fetch(`${API_BASE_URL}/stats`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('todayDetections').textContent = data.stats.today.total_detections || 0;
+                    document.getElementById('totalDetections').textContent = data.stats.overall.total_detections || 0;
+                    document.getElementById('avgTime').textContent = (data.stats.overall.avg_inference_time || 0).toFixed(2) + 's';
+                }
+            } catch (error) {
+                console.warn('无法加载统计数据:', error);
+            }
+        }
+
+        // 触发文件选择
+        function triggerFileInput() {
+            document.getElementById('fileInput').click();
+        }
+
+        // 处理拖拽事件
+        function handleDragOver(event) {
+            event.preventDefault();
+            document.getElementById('uploadArea').classList.add('dragover');
+        }
+
+        function handleDragLeave(event) {
+            event.preventDefault();
+            document.getElementById('uploadArea').classList.remove('dragover');
+        }
+
+        function handleDrop(event) {
+            event.preventDefault();
+            document.getElementById('uploadArea').classList.remove('dragover');
+            
+            const files = event.dataTransfer.files;
+            if (files.length > 0) {
+                processFile(files[0]);
+            }
+        }
+
+        // 处理文件选择
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                processFile(file);
+            }
+        }
+
+        // 处理文件
+        function processFile(file) {
+            // 验证文件类型
+            if (!file.type.startsWith('image/')) {
+                showError('请选择图像文件 (JPG, PNG, JPEG)');
+                return;
+            }
+
+            // 验证文件大小 (10MB)
+            if (file.size > 10 * 1024 * 1024) {
+                showError('图像文件大小不能超过10MB');
+                return;
+            }
+
+            // 读取并显示图像
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentImageData = e.target.result;
+                displayPreviewImage(currentImageData, file);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // 显示预览图像
+        function displayPreviewImage(imageData, file) {
+            const previewImage = document.getElementById('previewImage');
+            const imageInfo = document.getElementById('imageInfo');
+            const imagePreview = document.getElementById('imagePreview');
+            const uploadActions = document.getElementById('uploadActions');
+            const uploadArea = document.getElementById('uploadArea');
+
+            previewImage.src = imageData;
+            imageInfo.innerHTML = `
+                <strong>${file.name}</strong><br>
+                大小: ${(file.size / 1024 / 1024).toFixed(2)} MB | 
+                类型: ${file.type}
+            `;
+
+            imagePreview.style.display = 'block';
+            uploadActions.style.display = 'block';
+
+            // 更新上传区域提示
+            uploadArea.innerHTML = `
+                <div class="upload-icon">✅</div>
+                <div class="upload-text">图像已选择</div>
+                <div class="upload-subtext">点击下方按钮开始检测</div>
+            `;
+
+            // 隐藏初始状态
+            document.getElementById('initialState').style.display = 'none';
+        }
+
+        // 清除图像
+        function clearImage() {
+            currentImageData = null;
+            detectionResults = null;
+            
+            document.getElementById('imagePreview').style.display = 'none';
+            document.getElementById('uploadActions').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+            
+            // 恢复上传区域
+            document.getElementById('uploadArea').innerHTML = `
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">点击选择图像文件</div>
+                <div class="upload-subtext">
+                    或拖拽图像到此处<br>
+                    支持 JPG、PNG、JPEG 格式，最大 10MB
+                </div>
+            `;
+            
+            // 显示初始状态
+            showInitialState();
+        }
+
+        // 执行检测
+        async function performDetection() {
+            if (!currentImageData) {
+                showError('请先选择图像文件');
+                return;
+            }
+
+            // 显示加载状态
+            showLoadingState();
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/detect`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        image: currentImageData
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    detectionResults = data;
+                    displayResults(data);
+                    
+                    // 更新统计数据
+                    setTimeout(loadSystemStats, 1000);
+                } else {
+                    showError(data.error || '检测失败');
+                }
+
+            } catch (error) {
+                console.error('检测错误:', error);
+                showError('网络连接错误，请检查后端服务是否正常运行');
+            }
+        }
+
+        // 显示检测结果
+        function displayResults(data) {
+            const container = document.getElementById('resultsContainer');
+            
+            let html = `
+                <div class="detection-summary fade-in">
+                    <h3>🎯 检测完成</h3>
+                    <p><strong>检测时间:</strong> ${new Date(data.timestamp).toLocaleString()}</p>
+                    <p><strong>推理耗时:</strong> ${data.inference_time}s</p>
+                    <p><strong>发现病虫害:</strong> ${data.detection_count} 种</p>
+                    <p><strong>模型参数:</strong> conf=${data.model_params.confidence_threshold}, iou=${data.model_params.iou_threshold}, size=${data.model_params.input_size}</p>
+                </div>
+            `;
+
+            if (data.detections && data.detections.length > 0) {
+                html += '<div class="detection-results slide-in">';
+                html += '<h4>🐛 检测到的病虫害:</h4>';
+                
+                data.detections.forEach((detection, index) => {
+                    const confidenceClass = detection.confidence > 0.7 ? 'danger' : 
+                                           detection.confidence > 0.4 ? 'warning' : '';
+                    
+                    html += `
+                        <div class="detection-item ${confidenceClass}">
+                            <div class="pest-name">${detection.class_name}</div>
+                            <div class="confidence">置信度: ${(detection.confidence * 100).toFixed(1)}%</div>
+                            <div class="pest-details">
+                                类别ID: ${detection.class_id} | 
+                                位置: [${detection.bbox.map(x => x.toFixed(0)).join(', ')}]
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                html += '</div>';
+            } else {
+                html += `
+                    <div class="success slide-in">
+                        <div class="success-title">✅ 恭喜！</div>
+                        <p>未检测到明显的病虫害，作物状况良好！</p>
+                        <p>建议继续保持良好的田间管理。</p>
+                    </div>
+                `;
+            }
+
+            // 显示结果图像
+            if (data.result_image) {
+                html += `
+                    <div class="result-image-container fade-in">
+                        <h4>🖼️ 检测结果图像:</h4>
+                        <img src="${data.result_image}" class="result-image" alt="检测结果">
+                        <div class="image-actions">
+                            <button class="btn btn-small" onclick="downloadResultImage()">📥 下载结果</button>
+                            <button class="btn btn-secondary btn-small" onclick="shareResults()">📤 分享结果</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // 显示防治建议
+            if (data.treatment_advice) {
+                html += `
+                    <div class="treatment-advice fade-in">
+                        <div class="advice-title">
+                            <span class="advice-icon">💡</span>
+                            专业防治建议
+                        </div>
+                        <div class="advice-content">${data.treatment_advice}</div>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+            container.style.display = 'block';
+            
+            // 隐藏其他状态
+            document.getElementById('initialState').style.display = 'none';
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'none';
+        }
+
+        // 显示状态函数
+        function showInitialState() {
+            document.getElementById('initialState').style.display = 'block';
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'none';
+            document.getElementById('resultsContainer').style.display = 'none';
+        }
+
+        function showLoadingState() {
+            document.getElementById('initialState').style.display = 'none';
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('errorState').style.display = 'none';
+            document.getElementById('resultsContainer').style.display = 'none';
+            
+            // 禁用检测按钮
+            const detectButton = document.getElementById('detectButton');
+            detectButton.disabled = true;
+            detectButton.textContent = '🔍 检测中...';
+        }
+
+        function showError(message) {
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('initialState').style.display = 'none';
+            document.getElementById('loadingState').style.display = 'none';
+            document.getElementById('errorState').style.display = 'block';
+            document.getElementById('resultsContainer').style.display = 'none';
+            
+            // 恢复检测按钮
+            const detectButton = document.getElementById('detectButton');
+            detectButton.disabled = false;
+            detectButton.textContent = '🚀 开始检测';
+        }
+
+        // 下载结果图像
+        function downloadResultImage() {
+            if (!detectionResults || !detectionResults.result_image) {
+                alert('没有可下载的结果图像');
+                return;
+            }
+
+            const link = document.createElement('a');
+            link.href = detectionResults.result_image;
+            link.download = `pest_detection_result_${new Date().getTime()}.jpg`;
+            link.click();
+        }
+
+        // 分享结果
+        function shareResults() {
+            if (!detectionResults) {
+                alert('没有可分享的结果');
+                return;
+            }
+
+            const shareText = `🌾 病虫害检测结果\n检测时间: ${new Date(detectionResults.timestamp).toLocaleString()}\n发现病虫害: ${detectionResults.detection_count} 种\n推理耗时: ${detectionResults.inference_time}s`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: '病虫害检测结果',
+                    text: shareText,
+                    url: window.location.href
+                });
+            } else {
+                // 复制到剪贴板
+                navigator.clipboard.writeText(shareText).then(() => {
+                    alert('结果已复制到剪贴板');
+                });
+            }
+        }
+
+        // 键盘快捷键
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey && event.key === 'v') {
+                // Ctrl+V 粘贴图像
+                event.preventDefault();
+                // 这里可以添加粘贴图像的功能
+            }
+        });
+
+        // 页面可见性改变时更新状态
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                checkSystemStatus();
+                loadSystemStats();
+            }
+        });
+    </script>
+</body>
+</html>
