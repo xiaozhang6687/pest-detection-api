@@ -1,18 +1,13 @@
-# 简化版 requirements.txt - 针对免费云平台优化
-Flask==2.3.3
-Flask-CORS==4.0.0
-Pillow==10.0.0
-numpy==1.24.3
+# 超兼容版 requirements.txt - 适配所有云平台
+Flask>=2.0.0
+Flask-CORS>=3.0.0
+Pillow>=9.0.0
+numpy>=1.21.0
+requests>=2.25.0
+gunicorn>=20.0.0
 
-# 使用CPU版本的PyTorch（更小更快）
---index-url https://download.pytorch.org/whl/cpu
-torch==2.0.1+cpu
-torchvision==0.15.2+cpu
-
-# YOLOv8轻量版
-ultralytics==8.0.196
-
-# 其他必需包
-opencv-python-headless==4.8.0.76
-requests==2.31.0
-gunicorn==21.2.0
+# 轻量级AI包（可选，如果还失败就删除这部分）
+torch>=1.12.0
+torchvision>=0.13.0
+ultralytics>=8.0.0
+opencv-python-headless>=4.5.0
