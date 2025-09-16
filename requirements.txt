@@ -1,11 +1,18 @@
-flask==2.3.3
-flask-cors==4.0.0
-ultralytics==8.0.196
-opencv-python-headless==4.8.1.78
-pillow==10.0.1
+# 简化版 requirements.txt - 针对免费云平台优化
+Flask==2.3.3
+Flask-CORS==4.0.0
+Pillow==10.0.0
 numpy==1.24.3
+
+# 使用CPU版本的PyTorch（更小更快）
+--index-url https://download.pytorch.org/whl/cpu
 torch==2.0.1+cpu
 torchvision==0.15.2+cpu
+
+# YOLOv8轻量版
+ultralytics==8.0.196
+
+# 其他必需包
+opencv-python-headless==4.8.0.76
 requests==2.31.0
-python-dotenv==1.0.0
 gunicorn==21.2.0
